@@ -1,0 +1,56 @@
+rm(list = ls())
+install.packages("ggplot2")
+install.packages("dplyr")
+
+setwd("c:\\Users\\Lenovo\\Desktop\\Fig4D. correlation analysis\\")
+library(ggplot2)
+library(dplyr)
+Sys.setenv(LANGUAGE = "en") 
+options(stringsAsFactors = FALSE)
+
+tcga_gsva <- read.csv("example data_methylation.csv",row.names = 1)
+rownames(tcga_gsva) <- gsub("\\.","-",rownames(tcga_gsva))
+head(tcga_gsva)[,1:3]
+
+tcga_expr <- data.table::fread("example data_easy_input_expr.csv", data.table = F, )
+
+rownames(tcga_expr) <- tcga_expr[,1]
+tcga_expr <- tcga_expr[,-1]
+
+tcga_gsva <- tcga_gsva[colnames(tcga_expr),]
+tcga_expr[1:3,1:4]
+
+genelist <- read.table("example data_genelist.txt")
+genelist <- genelist$V1
+gene <- genelist
+immuscore <- function(gene){
+  y <- as.numeric(tcga_expr[gene,])
+  colnames <- colnames(tcga_gsva)
+  do.call(rbind,lapply(colnames, function(x){
+    dd  <- cor.test(as.numeric(tcga_gsva[,x]), y , method="spearman")
+    data.frame(gene=gene,immune_cells=x,cor=dd$estimate,p.value=dd$p.value )
+  }))
+}
+data <- do.call(rbind,lapply(genelist,immuscore))
+head(data)
+
+write.csv(data, "correlation.csv", quote = F, row.names = F)
+data$pstar <- ifelse(data$p.value < 0.05,
+                     ifelse(data$p.value < 0.01,"**","*"),
+                     "")
+data$pstar[1:20]
+ggplot(data, aes(immune_cells, gene)) + 
+  geom_tile(aes(fill = cor), colour = "white",size=1)+
+  scale_fill_gradient2(low = "#2b8cbe",mid = "white",high = "#e41a1c")+
+  geom_text(aes(label=pstar),col ="black",size = 5)+
+  theme_minimal()+
+  theme(axis.title.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 8))+
+  
+  labs(fill =paste0(" * p < 0.05","\n\n","** p < 0.01","\n\n","Correlation"))
+
+ggsave("methylation_correlation.pdf", width = 8, height = 10)
+
