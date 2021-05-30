@@ -1,0 +1,18 @@
+rm(list = ls())
+install.packages("ggplot2")
+install.packages("rmda")
+
+library(rmda)
+library(ggplot2)
+Data<- read.table(file = "c:/Users/Lenovo/Desktop/example data_DCA.csv", header = T,sep = ',')
+
+Radiomicsignature<-decision_curve(NR~Radiomicsignature,data=Data,family=binomial(link ='logit'),thresholds=seq(0,1,by=0.01),confidence.intervals=0.95,study.design='cohort')
+Radiomicnomogram<-decision_curve(NR~Radiomicnomogram,data=Data,family=binomial(link ='logit'),thresholds=seq(0,1,by=0.01),confidence.intervals=0.95,study.design='cohort')
+Radiologistsdiagnosis<-decision_curve(NR~Radiologistsdiagnosis,data=Data,family=binomial(link ='logit'),thresholds=seq(0,1,by=0.01),confidence.intervals=0.95,study.design='cohort')
+List<- list(Radiomicsignature,Radiomicnomogram,Radiologistsdiagnosis)
+
+plot_decision_curve(List,curve.names= c('ALN-tumor radiomic signature','Multiomic radiomic signature','Radiologists diagnosis'),cost.benefit.axis =F,confidence.intervals =F,standardize = FALSE,lwd = 3)
+
+plot_decision_curve(List,curve.names= c('ALN-tumor radiomic signature','Multiomic radiomic signature','Radiologists diagnosis'),cost.benefit.axis =F,confidence.intervals =F,standardize = FALSE,lwd = 3)
+
+
