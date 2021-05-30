@@ -1,0 +1,84 @@
+rm(list = ls())
+install.packages("e1071")
+install.packages("ROCR")
+
+train=read.table(file = "c:/Users/Lenovo/Desktop/example data_train.csv", header = T,sep = ',')
+train <- data.frame(train)
+train$NR <- factor(train$NR)
+str(train)
+names(train) 
+train<-na.omit(train)
+dim(train)
+rownames(train) =train$ID
+trainsvm=train[,-1]
+
+DHSDtest=read.table(file = "c:/Users/Lenovo/Desktop/example data_DHSDtest.csv", header = T,sep = ',')
+DHSDtest <- data.frame(DHSDtest)
+DHSDtest$NR <- factor(DHSDtest$NR)
+str(DHSDtest)
+names(DHSDtest) 
+DHSDtest<-na.omit(DHSDtest)
+dim(DHSDtest)
+rownames(DHSDtest) =DHSDtest$ID
+DHSDtestsvm=DHSDtest[,-1]
+
+
+ZENACtest=read.table(file = "c:/Users/Lenovo/Desktop/example data_ZENACtest.csv", header = T,sep = ',')
+ZENACtest <- data.frame(ZENACtest)
+ZENACtest$NR <- factor(ZENACtest$NR)
+str(ZENACtest)
+names(ZENACtest) 
+ZENACtest<-na.omit(ZENACtest)
+dim(ZENACtest)
+rownames(ZENACtest) =ZENACtest$ID
+ZENACtestsvm=ZENACtest[,-1]
+
+set.seed(123)
+library(e1071)
+Modelsvm <- svm(formula = NR ~ .,data = trainsvm,prob=TRUE)
+pred_ZENACtest=predict(Modelsvm, ZENACtestsvm, probability=TRUE)
+pred.prob_ZENACtest = attr(pred_ZENACtest, "probabilities")
+View(pred.prob_ZENACtest)
+ZENACpred.to.roc = pred.prob_ZENACtest[, 2]
+length(ZENACpred.to.roc)
+length(ZENACtestsvm$NR)
+library(ROCR)
+ZENACpred.rocr = prediction(ZENACpred.to.roc, ZENACtestsvm$NR)
+ZENACperf.rocr = performance(ZENACpred.rocr, measure = "auc", x.measure = "cutoff")
+ZENACpred.tpr.rocr = performance(ZENACpred.rocr, "tpr","fpr")
+plot(ZENACpred.tpr.rocr,colorize=T, main=paste("AUC:",(ZENACperf.rocr@y.values)))
+
+
+set.seed(123)
+library(e1071)
+Modelsvm <- svm(formula = NR ~ .,data = trainsvm,prob=TRUE)
+pred_DHSDtest=predict(Modelsvm, DHSDtestsvm, probability=TRUE)
+pred.prob_DHSDtest = attr(pred_DHSDtest, "probabilities")
+View(pred.prob_DHSDtest)
+DHSDpred.to.roc = pred.prob_DHSDtest[, 2]
+length(DHSDpred.to.roc)
+length(DHSDtestsvm$NR)
+library(ROCR)
+DHSDpred.rocr = prediction(DHSDpred.to.roc, DHSDtestsvm$NR)
+DHSDperf.rocr = performance(DHSDpred.rocr, measure = "auc", x.measure = "cutoff")
+DHSDpred.tpr.rocr = performance(DHSDpred.rocr, "tpr","fpr")
+plot(DHSDpred.tpr.rocr,colorize=T, main=paste("AUC:",(DHSDperf.rocr@y.values)))
+
+
+set.seed(123)
+Modelsvm <- svm(formula = NR ~ .,data = trainsvm,prob=TRUE)
+pred_train=predict(Modelsvm, trainsvm, probability=TRUE)
+pred.prob_train = attr(pred_train, "probabilities")
+View(pred.prob_train)
+pred.to.roc = pred.prob_train[, 1]
+length(pred.to.roc)
+length(trainsvm$NR)
+pred.rocr = prediction(pred.to.roc, trainsvm$NR)
+perf.rocr = performance(pred.rocr, measure = "auc", x.measure = "cutoff")
+pred.tpr.rocr = performance(pred.rocr, "tpr","fpr")
+plot(pred.tpr.rocr,colorize=T, main=paste("AUC:",(perf.rocr@y.values)))
+
+plot(pred.tpr.rocr,col="red", title=FALSE,lwd=2)
+plot(ZENACpred.tpr.rocr, col="blue",add=TRUE,title=FALSE,lwd=2)
+plot(DHSDpred.tpr.rocr, col="green",add=TRUE,title=FALSE,lwd=2)
+legend("bottomright", legend=c(paste("Training cohort",paste("AUC","=","0.88")),paste("Prospective−retrospective validation cohort",paste("AUC","=","0.87")),paste("External validation cohort",paste("AUC","=","0.87"))), col=c("red","blue","green"), lwd=3)
