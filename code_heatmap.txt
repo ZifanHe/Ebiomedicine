@@ -1,0 +1,19 @@
+rm(list = ls())
+install.packages("pheatmap")
+
+
+library(pheatmap)
+heatdata <- read.csv(file = "c:/Users/Lenovo/Desktop/example data_easy_input_expr.csv", row.names = 1)
+
+
+pheatmap(heatdata, 
+         cluster_rows = TRUE,
+         cluster_cols = TRUE,
+         annotation_legend=TRUE, 
+        
+         show_rownames = F,
+         scale = "row", 
+         color =colorRampPalette(c("blue", "white","red"))(100),
+         filename = "c:/Users/Lenovo/Desktop/expected output.pdf",
+         cellwidth = 8, cellheight = 20,
+         fontsize = 10)
